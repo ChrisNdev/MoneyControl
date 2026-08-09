@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public class Pessoa {
     public string id = "", nome = "", cor = "#7c7cf5", fone = "";

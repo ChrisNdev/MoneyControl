@@ -14,16 +14,16 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web.Script.Serialization;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public static class Cofre {
     public const int ITER = 310000;              // PBKDF2 (recomendação OWASP)
-    static readonly byte[] MARCA = Encoding.ASCII.GetBytes("CCB1");
+    static readonly byte[] MARCA = Encoding.ASCII.GetBytes("MCB1");
 
     public static string Pasta {
         get {
             return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CardControl");
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MoneyControl");
         }
     }
     public static string Arquivo { get { return Path.Combine(Pasta, "dados.bin"); } }
@@ -74,7 +74,7 @@ public static class Cofre {
 
     /* ------------------------ backup com senha ------------------------ */
 
-    // formato: "CCB1" | salt(16) | iv(16) | hmac(32) | cifrado
+    // formato: "MCB1" | salt(16) | iv(16) | hmac(32) | cifrado
     public static byte[] SelarComSenha(Estado s, string senha) {
         var salt = Aleatorio(16);
         byte[] kc, km;
@@ -98,7 +98,7 @@ public static class Cofre {
 
     public static Estado AbrirComSenha(byte[] arq, string senha) {
         if (arq.Length < 4 + 16 + 16 + 32 || !arq.Take(4).SequenceEqual(MARCA))
-            throw new InvalidDataException("Este arquivo não é um backup do CardControl.");
+            throw new InvalidDataException("Este arquivo não é um backup do MoneyControl.");
 
         var salt = Fatia(arq, 4, 16);
         var iv = Fatia(arq, 20, 16);

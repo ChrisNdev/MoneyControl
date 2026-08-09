@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public static class Aplicacao {
     public const string VERSAO = "4.0";
@@ -55,15 +55,15 @@ public static class Aplicacao {
     /* ---------------------------- avisos ---------------------------- */
 
     public static void Erro(string msg) {
-        MessageBox.Show(msg, "CardControl", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        MessageBox.Show(msg, "MoneyControl", MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 
     public static void Aviso(string msg) {
-        MessageBox.Show(msg, "CardControl", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show(msg, "MoneyControl", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     public static bool Confirma(string msg) {
-        return MessageBox.Show(msg, "CardControl", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        return MessageBox.Show(msg, "MoneyControl", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
                == DialogResult.Yes;
     }
 
@@ -95,13 +95,13 @@ public static class Aplicacao {
     /* ---------------------------- backup ---------------------------- */
 
     /// <summary>
-    /// Abre um backup do disco: `.ccb` protegido por senha ou `.json` em texto puro.
+    /// Abre um backup do disco: `.mcb` protegido por senha ou `.json` em texto puro.
     /// Devolve null se o usuário desistir ou se o arquivo não servir.
     /// </summary>
     public static Estado RestaurarDeArquivo() {
         using (var dlg = new OpenFileDialog {
             Title = "Restaurar backup",
-            Filter = "Backup do CardControl (*.ccb;*.json)|*.ccb;*.json|Todos os arquivos|*.*",
+            Filter = "Backup do MoneyControl (*.mcb;*.json)|*.mcb;*.json|Todos os arquivos|*.*",
         }) {
             if (dlg.ShowDialog() != DialogResult.OK) return null;
             try {
@@ -123,7 +123,7 @@ public static class Aplicacao {
         }
     }
 
-    /// <summary>Grava um `.ccb` com senha escolhida na hora — é o backup que abre em qualquer máquina.</summary>
+    /// <summary>Grava um `.mcb` com senha escolhida na hora — é o backup que abre em qualquer máquina.</summary>
     public static void ExportarBackup(Estado s) {
         string senha = PedirSenha("Backup criptografado",
             "Crie uma senha para este backup.\nÉ ela que vai abrir o arquivo em outro computador:");
@@ -133,8 +133,8 @@ public static class Aplicacao {
             Erro("As senhas não bateram."); return;
         }
         using (var dlg = new SaveFileDialog {
-            Title = "Salvar backup", Filter = "Backup do CardControl (*.ccb)|*.ccb",
-            FileName = "cardcontrol-" + Calc.Hoje() + ".ccb",
+            Title = "Salvar backup", Filter = "Backup do MoneyControl (*.mcb)|*.mcb",
+            FileName = "moneycontrol-" + Calc.Hoje() + ".mcb",
         }) {
             if (dlg.ShowDialog() != DialogResult.OK) return;
             try {
@@ -148,7 +148,7 @@ public static class Aplicacao {
         if (!Confirma("Este arquivo sai SEM criptografia — qualquer um que abrir vê tudo.\n\nContinuar?")) return;
         using (var dlg = new SaveFileDialog {
             Title = "Exportar sem criptografia", Filter = "JSON (*.json)|*.json",
-            FileName = "cardcontrol-" + Calc.Hoje() + "-SEM-SENHA.json",
+            FileName = "moneycontrol-" + Calc.Hoje() + "-SEM-SENHA.json",
         }) {
             if (dlg.ShowDialog() != DialogResult.OK) return;
             try { File.WriteAllText(dlg.FileName, Cofre.ParaJson(s), Encoding.UTF8); }

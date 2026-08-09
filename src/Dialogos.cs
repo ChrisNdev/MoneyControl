@@ -4,9 +4,9 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using A = CardControl.Aplicacao;
+using A = MoneyControl.Aplicacao;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public class FormLanc : Form {
     public Lanc Resultado;
@@ -360,7 +360,7 @@ public class FormCfg : Form {
         Controls.Add(fechar);
         AcceptButton = fechar;
 
-        Controls.Add(new Label { Text = "CardControl v" + Aplicacao.VERSAO, Location = new Point(14, 284),
+        Controls.Add(new Label { Text = "MoneyControl v" + Aplicacao.VERSAO, Location = new Point(14, 284),
                                  Width = 442, Height = 16, ForeColor = A.MUTED,
                                  Font = new Font("Segoe UI", 7.5f), TextAlign = ContentAlignment.MiddleRight });
     }

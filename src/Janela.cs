@@ -6,9 +6,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using A = CardControl.Aplicacao;
+using A = MoneyControl.Aplicacao;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public class Janela : Form {
     Estado S;
@@ -29,7 +29,7 @@ public class Janela : Form {
 
     public Janela(Estado s) {
         S = s;
-        Text = "CardControl";
+        Text = "MoneyControl";
         BackColor = A.BG; ForeColor = A.FG;
         Font = new Font("Segoe UI", 9f);
         ClientSize = new Size(1040, 720);
@@ -129,7 +129,7 @@ public class Janela : Form {
         acoes.Controls.Add(A.Btn("Config", (o, e) => AbrirCfg()));
 
         if (modo == "hub") {
-            titulo.Text = "CardControl";
+            titulo.Text = "MoneyControl";
             nav.Visible = false;
             conteudo.Controls.Add(VHub());
             return;
@@ -139,7 +139,7 @@ public class Janela : Form {
         var ps = Parcelas();
         var aberto = ps.Where(x => !x.pago).ToList();
 
-        titulo.Text = "CardControl · " + (Cartao ? "cartão" : "dívidas") + " · " +
+        titulo.Text = "MoneyControl · " + (Cartao ? "cartão" : "dívidas") + " · " +
                       Calc.Brl(aberto.Sum(x => x.v)) + (Cartao ? " a receber" : " a pagar");
 
         acoes.Controls.Add(Cartao

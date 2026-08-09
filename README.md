@@ -1,4 +1,4 @@
-<h1 align="center">CardControl</h1>
+<h1 align="center">MoneyControl</h1>
 
 <p align="center">
   Cartão compartilhado e dívidas pessoais, num programa só.<br>
@@ -20,7 +20,7 @@
 
 ## Baixar
 
-1. Baixe o **`CardControl.exe`** em [Releases](../../releases).
+1. Baixe o **`MoneyControl.exe`** em [Releases](../../releases).
 2. Rode.
 
 É isso. Um arquivo, sem instalador, sem cadastro, sem senha, sem configuração inicial.
@@ -93,7 +93,7 @@ Clique duplo na linha marca ou desmarca como paga.
 
 ## Seus dados
 
-Ficam **só no seu computador**, num arquivo em `%LOCALAPPDATA%\CardControl\dados.bin`.
+Ficam **só no seu computador**, num arquivo em `%LOCALAPPDATA%\MoneyControl\dados.bin`.
 
 | | |
 |---|---|
@@ -111,7 +111,7 @@ do mesmo Windows também não. Seu backup roubado não abre. Ninguém lê seus d
 os arquivos.
 
 **Não protege** contra um programa malicioso rodando **na sua própria conta do Windows**,
-com você logado. Ele pediria os dados ao DPAPI exatamente como o CardControl faz. Isso não
+com você logado. Ele pediria os dados ao DPAPI exatamente como o MoneyControl faz. Isso não
 é um defeito deste programa: qualquer app que abre sozinho, sem pedir senha, tem esse
 limite — a chave precisa estar ao alcance dele, logo ao alcance de quem roda como você.
 
@@ -120,7 +120,7 @@ abrir. Aqui a escolha foi abrir sem atrito. O backup, esse sim, tem senha.
 
 ### Backup
 
-**Config → Backup criptografado** gera um `.ccb` protegido por uma **senha que você
+**Config → Backup criptografado** gera um `.mcb` protegido por uma **senha que você
 escolhe na hora** — não pela chave da máquina. Isso é de propósito: um backup que só abre
 neste Windows não serviria de nada justamente no dia em que o computador morre.
 
@@ -136,7 +136,7 @@ senha: sem ela o arquivo não abre, e não há recuperação.
 Existe também *exportar sem criptografia* (`.json`), para levar os dados para uma
 planilha. Esse arquivo abre em qualquer editor — trate como documento sensível.
 
-> Apagar `%LOCALAPPDATA%\CardControl` apaga tudo. Faça backup.
+> Apagar `%LOCALAPPDATA%\MoneyControl` apaga tudo. Faça backup.
 
 ---
 
@@ -146,7 +146,7 @@ Sem projeto, sem NuGet, sem dependência: seis arquivos e o compilador que já v
 Windows, em `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`.
 
 ```bat
-csc /target:winexe /out:CardControl.exe ^
+csc /target:winexe /out:MoneyControl.exe ^
     /reference:System.dll /reference:System.Core.dll ^
     /reference:System.Drawing.dll /reference:System.Windows.Forms.dll ^
     /reference:System.Security.dll /reference:System.Web.Extensions.dll ^
@@ -168,7 +168,7 @@ parcelas** — a forma das duas é idêntica, e duas cópias seriam dois lugares
 ### Testes
 
 ```bat
-CardControl.exe --test
+MoneyControl.exe --test
 ```
 
 Escreve o resultado em `testes.txt` e devolve `0` se passou, `1` se falhou. Cobre a

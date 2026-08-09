@@ -1,4 +1,4 @@
-// Bateria de verificação. Roda com: CardControl.exe --test
+// Bateria de verificação. Roda com: MoneyControl.exe --test
 // Escreve o resultado em testes.txt e devolve código de saída 0 (ok) ou 1 (falhou).
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CardControl {
+namespace MoneyControl {
 
 public static class Testes {
     static int total, falhas;
