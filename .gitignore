@@ -1,4 +1,3 @@
-# saída da compilação e dos testes
-CardControl.exe
+# o CardControl.exe é versionado: é o que se baixa nas Releases
 CardControl.pdb
 testes.txt
