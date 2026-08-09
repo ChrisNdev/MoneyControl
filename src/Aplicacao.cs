@@ -182,10 +182,12 @@ public static class Aplicacao {
     /// <summary>Cartão de número grande do topo das telas de resumo.</summary>
     public static Panel Stat(string titulo, string valor, string rodape, Color cor) {
         var p = new Panel { BackColor = SURFACE, Padding = new Padding(12, 10, 12, 10), Margin = new Padding(0, 0, 10, 0) };
-        p.Controls.Add(new Label { Text = rodape, Dock = DockStyle.Bottom, ForeColor = MUTED,
-                                   Font = new Font("Segoe UI", 7.5f), Height = 16 });
+        // o Fill entra primeiro de propósito: docking é resolvido do último controle para o
+        // primeiro, então quem preenche tem que ser o último da fila ou come o rodapé
         p.Controls.Add(new Label { Text = valor, Dock = DockStyle.Fill, ForeColor = cor,
                                    Font = new Font("Segoe UI", 14f, FontStyle.Bold), AutoEllipsis = true });
+        p.Controls.Add(new Label { Text = rodape, Dock = DockStyle.Bottom, ForeColor = MUTED,
+                                   Font = new Font("Segoe UI", 7.5f), Height = 16 });
         p.Controls.Add(new Label { Text = titulo, Dock = DockStyle.Top, ForeColor = MUTED,
                                    Font = new Font("Segoe UI", 7.5f), Height = 16 });
         return p;

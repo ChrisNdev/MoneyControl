@@ -1,41 +1,99 @@
-# CardControl
+<h1 align="center">CardControl</h1>
 
-Controle de **cartão compartilhado** e **dívidas pessoais**, num programa só.
-Roda offline, no seu computador, com os dados **criptografados**.
+<p align="center">
+  Cartão compartilhado e dívidas pessoais, num programa só.<br>
+  Roda offline, no seu computador, com os dados criptografados.
+</p>
 
-Nada de servidor, nada de conta, nada de nuvem. É um `.exe` numa pasta.
+<p align="center">
+  <img alt="Windows" src="https://img.shields.io/badge/Windows-8%2B-0078D6">
+  <img alt=".NET Framework" src="https://img.shields.io/badge/.NET%20Framework-4.x-512BD4">
+  <img alt="Dependências" src="https://img.shields.io/badge/depend%C3%AAncias-nenhuma-success">
+  <img alt="Licença" src="https://img.shields.io/badge/licen%C3%A7a-MIT-blue">
+</p>
+
+<p align="center">
+  <img src="docs/cartao.png" alt="Resumo do cartão compartilhado" width="880">
+</p>
 
 ---
 
-## Instalar
+## Baixar
 
-1. Baixe o `CardControl.exe` da última versão em **Releases**.
-2. Rode. Pronto — não tem instalador, cadastro, senha nem configuração.
+1. Baixe o **`CardControl.exe`** em [Releases](../../releases).
+2. Rode.
 
-Requisitos: Windows com **.NET Framework 4.x**, que já vem no Windows 8 ou mais novo.
+É isso. Um arquivo, sem instalador, sem cadastro, sem senha, sem configuração inicial.
+Nada de servidor, nada de conta, nada de nuvem.
+
+Precisa do .NET Framework 4.x, que já vem no Windows 8 ou mais novo.
 
 ---
 
 ## O que ele faz
 
-**💳 Cartão compartilhado** — lança compras parceladas por pessoa, calcula quanto cada
-um deve, mostra a fatura do mês, uma tabela pessoa × mês e um botão de cobrar no WhatsApp.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-**🏦 Dívidas pessoais** — o que *você* deve, para quem, em quantas parcelas e quando vence,
-com progresso de quitação por credor.
+### 💳 Cartão compartilhado
 
-**Assinaturas** — em qualquer um dos dois módulos, marque `É uma assinatura` e o
-lançamento se repete todo mês. Para não virar uma lista infinita, ele só gera as parcelas
-**até o mês atual** — a cada mês que passa, aparece mais uma. O campo *até* encerra a
-assinatura sem apagar o histórico do que já foi pago.
+Você passa o cartão, várias pessoas usam. O programa lança as compras por pessoa,
+divide as parcelas, mostra a fatura do mês e diz quanto cada um te deve — com um
+botão que já abre a cobrança pronta no WhatsApp.
 
-Para marcar uma parcela como paga, clique duas vezes nela na aba **Parcelas**.
+</td>
+<td width="50%" valign="top">
+
+### 🏦 Dívidas pessoais
+
+O outro lado: o que **você** deve, para quem, em quantas parcelas e quando vence.
+Progresso de quitação por credor, parcelas atrasadas em vermelho, e o total que
+falta para ficar livre.
+
+</td>
+</tr>
+</table>
+
+Os dois módulos vivem no mesmo programa e no mesmo backup.
+
+<p align="center">
+  <img src="docs/hub.png" alt="Tela inicial com os dois módulos" width="880">
+</p>
+
+### Parcelas que fecham no centavo
+
+Dividir R$ 100 em 3 não dá 33,33 três vezes. A última parcela absorve a sobra, então a
+soma sempre bate com o total. `31/01 + 1 mês` vira `28/02`, e `29/02` em ano bissexto.
+
+### Assinaturas que não viram lista infinita
+
+Marque `É uma assinatura` e o lançamento se repete todo mês, sem fim. Para não gerar
+parcelas até o fim dos tempos, ele só cria **até o mês atual** — a cada mês que passa,
+aparece mais uma. O campo *até* encerra a assinatura sem apagar o histórico do que já
+foi pago.
+
+### Uma tabela pessoa × mês
+
+Quanto ainda falta em cada mês de vencimento, para cada pessoa. `✓` é mês quitado.
+
+<p align="center">
+  <img src="docs/pormes.png" alt="Tabela de pessoa por mês" width="880">
+</p>
+
+### Parcelas agrupadas por mês
+
+Clique duplo na linha marca ou desmarca como paga.
+
+<p align="center">
+  <img src="docs/parcelas.png" alt="Lista de parcelas agrupadas por mês" width="880">
+</p>
 
 ---
 
 ## Seus dados
 
-Ficam **só no seu computador**, em `%LOCALAPPDATA%\CardControl\dados.bin`.
+Ficam **só no seu computador**, num arquivo em `%LOCALAPPDATA%\CardControl\dados.bin`.
 
 | | |
 |---|---|
@@ -62,9 +120,9 @@ abrir. Aqui a escolha foi abrir sem atrito. O backup, esse sim, tem senha.
 
 ### Backup
 
-**⚙ → Backup criptografado** gera um `.ccb` protegido por uma **senha que você escolhe na
-hora** — não pela chave da máquina. Isso é de propósito: um backup que só abre neste
-Windows não serviria de nada justamente no dia em que o computador morre.
+**Config → Backup criptografado** gera um `.ccb` protegido por uma **senha que você
+escolhe na hora** — não pela chave da máquina. Isso é de propósito: um backup que só abre
+neste Windows não serviria de nada justamente no dia em que o computador morre.
 
 | | |
 |---|---|
@@ -104,6 +162,9 @@ csc /target:winexe /out:CardControl.exe ^
 | `src\Aplicacao.cs` | entrada, paleta e as peças de UI reaproveitadas |
 | `src\Testes.cs` | a bateria de verificação |
 
+Compra do cartão e dívida pessoal usam **o mesmo formulário e o mesmo gerador de
+parcelas** — a forma das duas é idêntica, e duas cópias seriam dois lugares para errar.
+
 ### Testes
 
 ```bat
@@ -114,7 +175,7 @@ Escreve o resultado em `testes.txt` e devolve `0` se passou, `1` se falhou. Cobr
 divisão de parcelas sem perder centavo, meses curtos e bissextos, assinaturas (fim no mês
 atual, cancelamento, dia 31), totais por pessoa, o cofre inteiro (ida e volta em disco,
 regravação por cima, adulteração de byte, senha errada, salt e IV novos a cada gravação) e
-a montagem de todas as telas, com dados e vazias.
+a montagem de todas as telas e caixas de cadastro, com dados e vazias.
 
 Os testes guardam e devolvem o `dados.bin` como estava — não mexem nos seus dados.
 

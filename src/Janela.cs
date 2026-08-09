@@ -78,7 +78,7 @@ public class Janela : Form {
         try { Cofre.Salvar(S); }
         catch (Exception e) {
             A.Erro("Não deu pra salvar: " + e.Message +
-                   "\n\nExporte um backup em ⚙ antes de fechar o programa.");
+                   "\n\nExporte um backup em Config antes de fechar o programa.");
         }
     }
 
@@ -126,7 +126,7 @@ public class Janela : Form {
     }
 
     void Desenhar() {
-        acoes.Controls.Add(A.Btn("⚙", (o, e) => AbrirCfg()));
+        acoes.Controls.Add(A.Btn("Config", (o, e) => AbrirCfg()));
 
         if (modo == "hub") {
             titulo.Text = "CardControl";
@@ -220,11 +220,12 @@ public class Janela : Form {
         var linha = new TableLayoutPanel { ColumnCount = 2, RowCount = 1, BackColor = Color.Transparent };
         linha.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         linha.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
-        linha.Controls.Add(Modulo("💳  Cartão compartilhado",
+        // sem emoji nos títulos: a Segoe UI não tem esses glifos e eles saem como quadrado vazio
+        linha.Controls.Add(Modulo("Cartão compartilhado",
             "Quem usou o cartão, quanto cada pessoa deve e quanto falta receber.",
             Calc.Brl(aReceber), aReceber > 0 ? A.WARN : A.OK, "a receber das pessoas",
             S.people.Count + " pessoas · " + S.buys.Count + " compras", () => IrPara("cartao")), 0, 0);
-        linha.Controls.Add(Modulo("🏦  Dívidas pessoais",
+        linha.Controls.Add(Modulo("Dívidas pessoais",
             "O que você deve, para quem, em quantas parcelas e quando vence.",
             Calc.Brl(aPagar), atrasadas > 0 ? A.BAD : aPagar > 0 ? A.WARN : A.OK,
             atrasadas > 0 ? atrasadas + " parcela(s) atrasada(s)" : "a pagar",
