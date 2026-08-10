@@ -44,6 +44,7 @@ public class Janela : Form {
         MinimumSize = new Size(1180, 800);
         StartPosition = FormStartPosition.CenterScreen;
         DoubleBuffered = true;
+        try { Icon = Icon.ExtractAssociatedIcon(Aplicacao.Exe); } catch { }
 
         conteudo.Dock = DockStyle.Fill;
         conteudo.AutoScroll = true;
@@ -77,7 +78,7 @@ public class Janela : Form {
         marca.Dock = DockStyle.Top; marca.Height = 84; marca.BackColor = Ui.NAV;
         marca.Fundo = Color.Transparent; marca.Borda = Color.Transparent;
         marca.Desenhar = (g, r) => {
-            Ui.Chip(g, new Rectangle(r.X + 24, r.Y + 24, 38, 38), "carteira", Ui.ACC, Ui.CHIP, 12);
+            Ui.Marca(g, new RectangleF(r.X + 24, r.Y + 23, 40, 40));
             Ui.Txt(g, "MoneyControl", Ui.F(17, true), Ui.FG, new Rectangle(r.X + 74, r.Y + 26, 160, 20));
             Ui.Txt(g, "v" + Aplicacao.VERSAO, Ui.F(12), Ui.LBL, new Rectangle(r.X + 74, r.Y + 45, 160, 16));
         };

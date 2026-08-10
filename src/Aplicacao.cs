@@ -1,6 +1,8 @@
 // Ponto de entrada, avisos e backup. A parte visual mora em Ui.cs.
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -16,6 +18,8 @@ public static class Aplicacao {
     [STAThread]
     static int Main(string[] args) {
         if (args.Length > 0 && args[0] == "--test") return Testes.Rodar();
+        if (args.Length > 0 && args[0] == "--icone")
+            return GerarIcone(args.Length > 1 ? args[1] : "docs\\moneycontrol.ico");
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
@@ -87,6 +91,51 @@ public static class Aplicacao {
     }
 
     public static string PedirSenha(string titulo, string texto) { return PedirTexto(titulo, texto, true); }
+
+    /* ---------------------------- ícone ---------------------------- */
+
+    /// <summary>
+    /// Escreve o `.ico` do executável a partir da mesma marca que o menu desenha, em todos
+    /// os tamanhos que o Windows pede. Assim o ícone não é um binário solto no repositório:
+    /// sai do código, e `--icone` refaz quando a marca mudar.
+    /// </summary>
+    public static int GerarIcone(string caminho) {
+        int[] tamanhos = { 16, 24, 32, 48, 64, 128, 256 };
+        var imagens = new List<byte[]>();
+        foreach (var t in tamanhos) {
+            using (var bmp = new Bitmap(t, t, PixelFormat.Format32bppArgb))
+            using (var g = Graphics.FromImage(bmp)) {
+                g.Clear(Color.Transparent);
+                Ui.Marca(g, new RectangleF(0, 0, t, t));
+                using (var ms = new MemoryStream()) {
+                    bmp.Save(ms, ImageFormat.Png);      // PNG dentro do .ico: aceito desde o Vista
+                    imagens.Add(ms.ToArray());
+                }
+            }
+        }
+        try {
+            string pasta = Path.GetDirectoryName(Path.GetFullPath(caminho));
+            if (!string.IsNullOrEmpty(pasta)) Directory.CreateDirectory(pasta);
+            using (var fs = File.Create(caminho))
+            using (var w = new BinaryWriter(fs)) {
+                w.Write((short)0); w.Write((short)1); w.Write((short)tamanhos.Length);
+                int pos = 6 + 16 * tamanhos.Length;
+                for (int i = 0; i < tamanhos.Length; i++) {
+                    byte lado = (byte)(tamanhos[i] >= 256 ? 0 : tamanhos[i]);   // 0 quer dizer 256
+                    w.Write(lado); w.Write(lado);
+                    w.Write((byte)0); w.Write((byte)0);
+                    w.Write((short)1); w.Write((short)32);
+                    w.Write(imagens[i].Length); w.Write(pos);
+                    pos += imagens[i].Length;
+                }
+                foreach (var b in imagens) w.Write(b);
+            }
+        } catch (Exception e) {
+            Erro("Não deu pra gravar o ícone: " + e.Message);
+            return 1;
+        }
+        return 0;
+    }
 
     /* ---------------------------- backup ---------------------------- */
 

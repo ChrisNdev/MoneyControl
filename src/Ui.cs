@@ -332,6 +332,82 @@ public static class Ui {
         g.Restore(st);
     }
 
+    /* ---------------------------- a marca ---------------------------- */
+
+    /// <summary>
+    /// O cartão holográfico sobre o quadrado escuro, desenhado num grid de 100 — é a mesma
+    /// rotina que pinta o chip do menu e que gera o .ico do executável, então os dois nunca
+    /// saem diferentes. O degradê real é uma malha 2D; aqui são duas passadas cruzadas.
+    /// </summary>
+    public static void Marca(Graphics g, RectangleF box, bool fundo = true) {
+        var st = g.Save();
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.TranslateTransform(box.X, box.Y);
+        g.ScaleTransform(box.Width / 100f, box.Height / 100f);
+
+        if (fundo) {
+            using (var p = Round(new RectangleF(0, 0, 100, 100), 22.5f))
+            using (var b = new LinearGradientBrush(new RectangleF(-1, -1, 102, 102),
+                                                   H("#26282C"), H("#17181A"), 90f))
+                g.FillPath(b, p);
+        }
+
+        Brilho(g, 74.5f, 25f, 4.2f, 9f);
+
+        var st2 = g.Save();
+        g.TranslateTransform(49, 49);
+        g.RotateTransform(-9);
+        var cartao = new RectangleF(-27, -16.5f, 54, 33);
+        var moldura = new RectangleF(-28, -17.5f, 56, 35);
+        using (var p = Round(cartao, 4.5f)) {
+            using (var b = new LinearGradientBrush(moldura, Color.White, Color.White, 20f)) {
+                b.InterpolationColors = new ColorBlend {
+                    Colors = new[] { H("#A9DCF5"), H("#CFDCF4"), H("#F6C4DE"), H("#FBE4A0") },
+                    Positions = new[] { 0f, .26f, .6f, 1f },
+                };
+                g.FillPath(b, p);
+            }
+            // segunda passada: o verde sobe do canto de baixo à esquerda e some no meio
+            using (var b = new LinearGradientBrush(moldura, Color.White, Color.White, -42f)) {
+                var verde = H("#C2E7B6");
+                b.InterpolationColors = new ColorBlend {
+                    Colors = new[] { Alfa(verde, .92), Alfa(verde, .55), Alfa(verde, 0), Alfa(verde, 0) },
+                    Positions = new[] { 0f, .22f, .55f, 1f },
+                };
+                g.FillPath(b, p);
+            }
+            using (var caneta = new Pen(Alfa(Color.White, .55), .9f)) g.DrawPath(caneta, p);
+        }
+
+        // chip dourado
+        var chip = new RectangleF(-17.5f, -6f, 10.5f, 9f);
+        Fill(g, chip, 2f, H("#E9C36F"));
+        using (var risco = new Pen(H("#C79F52"), .8f)) {
+            g.DrawLine(risco, chip.X + chip.Width / 2, chip.Y, chip.X + chip.Width / 2, chip.Bottom);
+            g.DrawLine(risco, chip.X, chip.Y + chip.Height / 2, chip.Right, chip.Y + chip.Height / 2);
+        }
+
+        var barra = Color.FromArgb(190, 166, 188, 166);
+        Fill(g, new RectangleF(-17.5f, 6f, 27.5f, 3f), 1.5f, barra);
+        Fill(g, new RectangleF(12.8f, 5.4f, 8.4f, 3f), 1.5f, barra);
+
+        g.Restore(st2);
+        g.Restore(st);
+    }
+
+    /// <summary>Estrela de quatro pontas com os lados côncavos.</summary>
+    static void Brilho(Graphics g, float cx, float cy, float rx, float ry) {
+        var p = new GraphicsPath();
+        float k = .15f;   // quanto o lado afunda em direção ao centro
+        p.AddBezier(cx, cy - ry, cx + rx * k, cy - ry * k, cx + rx * k, cy - ry * k, cx + rx, cy);
+        p.AddBezier(cx + rx, cy, cx + rx * k, cy + ry * k, cx + rx * k, cy + ry * k, cx, cy + ry);
+        p.AddBezier(cx, cy + ry, cx - rx * k, cy + ry * k, cx - rx * k, cy + ry * k, cx - rx, cy);
+        p.AddBezier(cx - rx, cy, cx - rx * k, cy - ry * k, cx - rx * k, cy - ry * k, cx, cy - ry);
+        p.CloseFigure();
+        using (var b = new SolidBrush(Color.White)) g.FillPath(b, p);
+        p.Dispose();
+    }
+
     static readonly Dictionary<string, string> ICONE_CAT = new Dictionary<string, string> {
         { "Alimentação", "garfo" }, { "Mercado", "compras" }, { "Eletrônicos", "monitor" },
         { "Roupas", "camisa" }, { "Transporte", "carro" }, { "Assinaturas", "repete" },

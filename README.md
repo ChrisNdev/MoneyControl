@@ -148,7 +148,7 @@ Sem projeto, sem NuGet, sem dependência: sete arquivos e o compilador que já v
 Windows, em `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`.
 
 ```bat
-csc /target:winexe /out:MoneyControl.exe ^
+csc /target:winexe /out:MoneyControl.exe /win32icon:docs\moneycontrol.ico ^
     /reference:System.dll /reference:System.Core.dll ^
     /reference:System.Drawing.dll /reference:System.Windows.Forms.dll ^
     /reference:System.Security.dll /reference:System.Web.Extensions.dll ^
@@ -169,6 +169,15 @@ A interface é desenhada à mão em GDI+: WinForms não tem canto arredondado, g
 glow nem ícone vetorial. Tudo isso sai de `Ui.cs`, sobre um único controle (`Card`) que as
 telas ou compõem com filhos ou pintam por dentro. Os ícones são glifos geométricos
 desenhados num grid 24×24 — nenhum emoji, nenhum arquivo de fonte para carregar.
+
+A marca também é código: `Ui.Marca` pinta o cartão holográfico que aparece no topo do menu,
+e é a mesma rotina que gera o `.ico` do executável — em todos os tamanhos, de 16 a 256.
+
+```bat
+MoneyControl.exe --icone docs\moneycontrol.ico
+```
+
+Rode isso e recompile quando mexer na marca; o ícone nunca sai de sincronia com a tela.
 
 Compra do cartão e dívida pessoal usam **o mesmo formulário e o mesmo gerador de
 parcelas** — a forma das duas é idêntica, e duas cópias seriam dois lugares para errar.
