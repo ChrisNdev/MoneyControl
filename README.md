@@ -73,9 +73,10 @@ parcelas até o fim dos tempos, ele só cria **até o mês atual** — a cada m�
 aparece mais uma. O campo *até* encerra a assinatura sem apagar o histórico do que já
 foi pago.
 
-### Uma tabela pessoa × mês
+### Vencimentos mês a mês
 
-Quanto ainda falta em cada mês de vencimento, para cada pessoa. `✓` é mês quitado.
+Um gráfico de barras empilhadas por pessoa e, abaixo, um cartão por mês com quanto falta
+de cada um. Mês vencido sai inteiro em vermelho; o mês atual, no acento.
 
 <p align="center">
   <img src="docs/pormes.png" alt="Tabela de pessoa por mês" width="880">
@@ -83,7 +84,8 @@ Quanto ainda falta em cada mês de vencimento, para cada pessoa. `✓` é mês q
 
 ### Parcelas agrupadas por mês
 
-Clique duplo na linha marca ou desmarca como paga.
+Um clique no círculo da linha marca ou desmarca como paga. Cada mês é um cartão com a
+contagem e a soma; o filtro em pílula troca entre abertas, atrasadas, pagas e todas.
 
 <p align="center">
   <img src="docs/parcelas.png" alt="Lista de parcelas agrupadas por mês" width="880">
@@ -120,7 +122,7 @@ abrir. Aqui a escolha foi abrir sem atrito. O backup, esse sim, tem senha.
 
 ### Backup
 
-**Config → Backup criptografado** gera um `.mcb` protegido por uma **senha que você
+**Configurações → Backup criptografado** gera um `.mcb` protegido por uma **senha que você
 escolhe na hora** — não pela chave da máquina. Isso é de propósito: um backup que só abre
 neste Windows não serviria de nada justamente no dia em que o computador morre.
 
@@ -142,7 +144,7 @@ planilha. Esse arquivo abre em qualquer editor — trate como documento sensíve
 
 ## Compilar do código
 
-Sem projeto, sem NuGet, sem dependência: seis arquivos e o compilador que já vem no
+Sem projeto, sem NuGet, sem dependência: sete arquivos e o compilador que já vem no
 Windows, em `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`.
 
 ```bat
@@ -157,10 +159,16 @@ csc /target:winexe /out:MoneyControl.exe ^
 |---|---|
 | `src\Modelo.cs` | dados e cálculo — parcelas, assinaturas, totais. Sem UI. |
 | `src\Cofre.cs` | gravação cifrada e backup com senha |
-| `src\Janela.cs` | janela principal: hub, abas, tabelas |
-| `src\Dialogos.cs` | cadastro de lançamento, pessoa e configurações |
-| `src\Aplicacao.cs` | entrada, paleta e as peças de UI reaproveitadas |
+| `src\Ui.cs` | tokens visuais, desenho em GDI+, ícones e os dois controles base |
+| `src\Janela.cs` | janela principal: menu lateral e todas as telas |
+| `src\Dialogos.cs` | cadastro de lançamento e de pessoa |
+| `src\Aplicacao.cs` | entrada, avisos e backup |
 | `src\Testes.cs` | a bateria de verificação |
+
+A interface é desenhada à mão em GDI+: WinForms não tem canto arredondado, gradiente,
+glow nem ícone vetorial. Tudo isso sai de `Ui.cs`, sobre um único controle (`Card`) que as
+telas ou compõem com filhos ou pintam por dentro. Os ícones são glifos geométricos
+desenhados num grid 24×24 — nenhum emoji, nenhum arquivo de fonte para carregar.
 
 Compra do cartão e dívida pessoal usam **o mesmo formulário e o mesmo gerador de
 parcelas** — a forma das duas é idêntica, e duas cópias seriam dois lugares para errar.

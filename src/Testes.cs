@@ -237,7 +237,6 @@ public static class Testes {
             using (var f = new FormLanc(new Estado(), false, null)) { } // sem credor nenhum
             using (var f = new FormPessoa(s, null)) { }
             using (var f = new FormPessoa(s, s.people[0])) { }
-            using (var f = new FormCfg(s)) { }
         } catch (Exception e) { caixas = false; erro = e.GetType().Name + ": " + e.Message; }
         Ok(caixas, "uma caixa de cadastro estourou ao ser montada — " + erro);
     }
