@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MoneyControl {
@@ -226,15 +227,40 @@ public static class Ui {
         using (var q = Round(new RectangleF(x, y, w, h), r)) if (q.PointCount > 0) p.AddPath(q, false);
     }
     static void E(GraphicsPath p, float x, float y, float w, float h) { p.AddEllipse(x, y, w, h); }
-    static void Pg(GraphicsPath p, params float[] xy) {
-        var pts = new PointF[xy.Length / 2];
-        for (int i = 0; i < pts.Length; i++) pts[i] = new PointF(xy[i * 2], xy[i * 2 + 1]);
-        p.AddPolygon(pts);
-    }
     static void Anel(GraphicsPath p, float x, float y, float w, float h, float esp, float ini, float var) {
         p.AddArc(x, y, w, h, ini, var);
         p.AddArc(x + esp, y + esp, w - 2 * esp, h - 2 * esp, ini + var, -var);
         p.CloseFigure();
+    }
+
+    /// <summary>Polígono de cantos arredondados — é o que separa um glifo desenhado de um recorte.</summary>
+    static void PgR(GraphicsPath p, float raio, params float[] xy) {
+        int n = xy.Length / 2;
+        var v = new PointF[n];
+        for (int i = 0; i < n; i++) v[i] = new PointF(xy[i * 2], xy[i * 2 + 1]);
+        var q = new GraphicsPath();
+        for (int i = 0; i < n; i++) {
+            PointF a = v[(i - 1 + n) % n], b = v[i], c = v[(i + 1) % n];
+            // entra e sai do vértice a `raio` de distância, curvando por cima dele
+            q.AddBezier(Rumo(b, a, raio), b, b, Rumo(b, c, raio));
+        }
+        q.CloseFigure();
+        p.AddPath(q, false);
+        q.Dispose();
+    }
+
+    static PointF Rumo(PointF de, PointF para, float d) {
+        float dx = para.X - de.X, dy = para.Y - de.Y;
+        float m = (float)Math.Sqrt(dx * dx + dy * dy);
+        if (m < .001f) return de;
+        d = Math.Min(d, m / 2);
+        return new PointF(de.X + dx / m * d, de.Y + dy / m * d);
+    }
+
+    static void Polar(List<float> xy, double grausCentro, double raio) {
+        double a = grausCentro * Math.PI / 180;
+        xy.Add((float)(12 + raio * Math.Cos(a)));
+        xy.Add((float)(12 + raio * Math.Sin(a)));
     }
 
     public static void Icone(Graphics g, string nome, RectangleF box, Color cor) {
@@ -245,7 +271,7 @@ public static class Ui {
         var p = Novo();
         switch (nome ?? "") {
             case "inicio":
-                Pg(p, 12, 2, 23, 11.5f, 1, 11.5f); R(p, 4, 11, 16, 11, 3); R(p, 10, 15, 4, 7, 1); break;
+                PgR(p, 1.6f, 12, 2, 23, 11.5f, 1, 11.5f); R(p, 4, 11, 16, 11, 3); R(p, 10, 15, 4, 7, 1); break;
             case "cartao":
                 R(p, 2, 5, 20, 14, 4); R(p, 3.5f, 9, 17, 3, 0); R(p, 5, 14, 6, 2, 1); break;
             case "carteira":
@@ -261,8 +287,8 @@ public static class Ui {
                 R(p, 2, 17, 5, 3, 1.5f); R(p, 9, 17, 13, 3, 1.5f); break;
             case "compras":   // carrinho: a sacola vira um borrão num chip de 18px, o carrinho não
                 // formas que não se cruzam: com FillMode.Alternate, sobreposição viraria buraco
-                Pg(p, 0.8f, 2.4f, 6.6f, 2.4f, 9, 6, 6.2f, 6, 4.4f, 4.8f, 0.8f, 4.8f);
-                Pg(p, 6.8f, 6, 22.5f, 6, 19.5f, 15, 9, 15);
+                PgR(p, 0.7f, 0.8f, 2.4f, 6.6f, 2.4f, 9, 6, 6.2f, 6, 4.4f, 4.8f, 0.8f, 4.8f);
+                PgR(p, 1.2f, 6.8f, 6, 22.5f, 6, 19.5f, 15, 9, 15);
                 E(p, 7.6f, 17, 3.8f, 3.8f); E(p, 15.6f, 17, 3.8f, 3.8f); break;
             case "pessoas":
                 E(p, 4, 3, 8, 8); R(p, 1, 13, 14, 9, 4.5f); E(p, 14, 5, 6, 6); R(p, 16, 14, 7, 8, 3.5f); break;
@@ -273,56 +299,54 @@ public static class Ui {
                 R(p, 10.5f, 0, 3, 4, 1); R(p, 10.5f, 20, 3, 4, 1);
                 R(p, 0, 10.5f, 4, 3, 1); R(p, 20, 10.5f, 4, 3, 1); break;
             case "backup":
-                Pg(p, 12, 2, 21, 6, 21, 12, 12, 22, 3, 12, 3, 6);
-                Pg(p, 7.5f, 12, 10.5f, 15, 16, 8.5f, 18, 10.5f, 10.5f, 18.5f, 6, 14); break;
+                PgR(p, 1.8f, 12, 2, 21, 6, 21, 12, 12, 22, 3, 12, 3, 6);
+                PgR(p, 0.6f, 7.5f, 12, 10.5f, 15, 16, 8.5f, 18, 10.5f, 10.5f, 18.5f, 6, 14); break;
             case "alerta":
-                Pg(p, 12, 2.5f, 23, 21, 1, 21); R(p, 11, 9, 2, 6, 1); E(p, 11, 16.5f, 2, 2); break;
+                PgR(p, 2.2f, 12, 2.5f, 23, 21, 1, 21); R(p, 11, 9, 2, 6, 1); E(p, 11, 16.5f, 2, 2); break;
             case "check":
-                Pg(p, 2.5f, 12, 5.5f, 9, 9.5f, 13, 18.5f, 4, 21.5f, 7, 9.5f, 19); break;
+                PgR(p, 1f, 2.5f, 12, 5.5f, 9, 9.5f, 13, 18.5f, 4, 21.5f, 7, 9.5f, 19); break;
             case "relogio":
                 E(p, 2, 2, 20, 20); E(p, 5, 5, 14, 14); R(p, 11, 6.5f, 2, 6.5f, 1); R(p, 11, 11, 6, 2, 1); break;
-            case "cobrar":
-                R(p, 2, 2, 20, 16, 5); Pg(p, 6, 16, 6, 22.5f, 12.5f, 17);
+            case "cobrar":  // o rabicho encosta na base do balão, não entra: sobreposição virava buraco
+                R(p, 2, 2, 20, 16, 5); PgR(p, .9f, 7, 18, 7, 23, 13, 18);
                 R(p, 6, 6.5f, 12, 2, 1); R(p, 6, 11, 8, 2, 1); break;
             case "mais":
                 R(p, 10.5f, 3, 3, 18, 1.5f); R(p, 3, 10.5f, 18, 3, 1.5f); break;
             case "editar":
-                Pg(p, 2, 22, 3.6f, 16.8f, 14.6f, 5.8f, 19.2f, 10.4f, 8.2f, 21.4f);
-                Pg(p, 16.4f, 4, 20, 7.6f, 22, 5.6f, 18.4f, 2); break;
+                PgR(p, .8f, 2, 22, 3.6f, 16.8f, 14.6f, 5.8f, 19.2f, 10.4f, 8.2f, 21.4f);
+                PgR(p, .6f, 16.4f, 4, 20, 7.6f, 22, 5.6f, 18.4f, 2); break;
             case "excluir":
                 R(p, 3, 5, 18, 2.6f, 1.3f); R(p, 9, 2, 6, 3, 1); R(p, 10.5f, 3.2f, 3, 1.8f, .6f);
                 R(p, 5, 8.5f, 14, 13.5f, 3); R(p, 9, 11.5f, 2, 7.5f, 1); R(p, 13, 11.5f, 2, 7.5f, 1); break;
             case "seta":
-                Pg(p, 4, 10.5f, 13.5f, 10.5f, 13.5f, 5, 21, 12, 13.5f, 19, 13.5f, 13.5f, 4, 13.5f); break;
-            case "fechar":
-                Pg(p, 4, 6.1f, 6.1f, 4, 20, 17.9f, 17.9f, 20);
-                Pg(p, 17.9f, 4, 20, 6.1f, 6.1f, 20, 4, 17.9f); break;
+                PgR(p, 1.2f, 4, 10.5f, 13.5f, 10.5f, 13.5f, 5, 21, 12, 13.5f, 19, 13.5f, 13.5f, 4, 13.5f); break;
+            case "fechar":  // contorno único do X: duas barras cruzadas viravam gravata-borboleta
+                PgR(p, 1.3f, 21.3f, 18.7f, 14.7f, 12, 21.3f, 5.3f, 18.7f, 2.7f, 12, 9.3f,
+                    5.3f, 2.7f, 2.7f, 5.3f, 9.3f, 12, 2.7f, 18.7f, 5.3f, 21.3f, 12, 14.7f,
+                    18.7f, 21.3f); break;
             case "dinheiro":
                 R(p, 2, 5, 20, 14, 3); E(p, 9.5f, 8.5f, 5, 7); break;
             case "exportar":
-                R(p, 10.5f, 2, 3, 10, 1.5f); Pg(p, 6.5f, 11, 17.5f, 11, 12, 18);
+                R(p, 10.5f, 2, 3, 9, 1.5f); PgR(p, 1.2f, 6.5f, 11, 17.5f, 11, 12, 18);
                 R(p, 3, 19.5f, 18, 2.6f, 1.3f); break;
             case "garfo":
                 R(p, 4, 2, 1.6f, 9, .8f); R(p, 7, 2, 1.6f, 9, .8f); R(p, 10, 2, 1.6f, 9, .8f);
-                R(p, 6.2f, 9.5f, 3, 12.5f, 1.5f); Pg(p, 16, 2, 19, 2, 19, 13, 16, 13);
+                R(p, 6.2f, 9.5f, 3, 12.5f, 1.5f); PgR(p, 1f, 16, 2, 19, 2, 19, 13, 16, 13);
                 R(p, 16.8f, 13, 1.6f, 9, .8f); break;
             case "monitor":
                 R(p, 2, 3, 20, 14, 3); R(p, 5, 6, 14, 8, 1); R(p, 10.5f, 17.5f, 3, 2.5f, 0);
                 R(p, 6, 20, 12, 2.2f, 1.1f); break;
             case "camisa":
-                Pg(p, 9, 2, 12, 4.5f, 15, 2, 21, 5, 19, 10.5f, 17, 9.5f, 17, 22, 7, 22, 7, 9.5f, 5, 10.5f, 3, 5); break;
+                PgR(p, .8f, 9, 2, 12, 4.5f, 15, 2, 21, 5, 19, 10.5f, 17, 9.5f, 17, 22, 7, 22, 7, 9.5f, 5, 10.5f, 3, 5); break;
             case "carro":
-                R(p, 2, 10, 20, 8, 3); Pg(p, 5, 10, 7, 4.5f, 17, 4.5f, 19, 10);
+                R(p, 2, 10, 20, 8, 3); PgR(p, 1.2f, 5, 10, 7, 4.5f, 17, 4.5f, 19, 10);
                 E(p, 4.5f, 13.5f, 4, 4); E(p, 15.5f, 13.5f, 4, 4); break;
             case "repete":
-                Anel(p, 3, 3, 18, 18, 2.8f, 50, 280); Pg(p, 17.5f, 0.5f, 23.5f, 5.5f, 16, 7.5f); break;
+                Anel(p, 3, 3, 18, 18, 2.8f, 50, 280); PgR(p, 1f, 17.5f, 0.5f, 23.5f, 5.5f, 16, 7.5f); break;
             case "estrela": {
                 var xy = new List<float>();
-                for (int i = 0; i < 10; i++) {
-                    double a = -Math.PI / 2 + i * Math.PI / 5, rr = (i % 2 == 0) ? 10.0 : 4.4;
-                    xy.Add((float)(12 + rr * Math.Cos(a))); xy.Add((float)(12 + rr * Math.Sin(a)));
-                }
-                Pg(p, xy.ToArray()); break;
+                for (int i = 0; i < 10; i++) Polar(xy, -90 + i * 36, i % 2 == 0 ? 10.0 : 4.4);
+                PgR(p, 1.5f, xy.ToArray()); break;
             }
             default:  // "pontos"
                 E(p, 2.5f, 10.5f, 3.5f, 3.5f); E(p, 10.25f, 10.5f, 3.5f, 3.5f); E(p, 18, 10.5f, 3.5f, 3.5f); break;
@@ -330,6 +354,25 @@ public static class Ui {
         using (var b = new SolidBrush(cor)) g.FillPath(b, p);
         p.Dispose();
         g.Restore(st);
+    }
+
+    /* ---------------------------- barra de título ---------------------------- */
+
+    [DllImport("dwmapi.dll")]
+    static extern int DwmSetWindowAttribute(IntPtr janela, int atributo, ref int valor, int tamanho);
+
+    /// <summary>
+    /// Manda o Windows desenhar a barra de título no escuro, independente do tema do sistema:
+    /// o app é escuro sempre. Quem pinta continua sendo o DWM — trocar uma cor não vale
+    /// reimplementar arrastar, encaixar, maximizar e redimensionar na mão.
+    /// </summary>
+    public static void BarraEscura(Form f) {
+        try {
+            int sim = 1;
+            // 20 desde a build 18985; 19 nas anteriores
+            if (DwmSetWindowAttribute(f.Handle, 20, ref sim, 4) != 0)
+                DwmSetWindowAttribute(f.Handle, 19, ref sim, 4);
+        } catch { }
     }
 
     /* ---------------------------- a marca ---------------------------- */

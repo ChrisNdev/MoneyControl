@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
@@ -17,9 +18,9 @@ public static class Aplicacao {
 
     [STAThread]
     static int Main(string[] args) {
-        if (args.Length > 0 && args[0] == "--test") return Testes.Rodar();
+        if (args.Length > 0 && args[0] == "--test") Encerrar(Testes.Rodar());
         if (args.Length > 0 && args[0] == "--icone")
-            return GerarIcone(args.Length > 1 ? args[1] : "docs\\moneycontrol.ico");
+            Encerrar(GerarIcone(args.Length > 1 ? args[1] : "docs\\moneycontrol.ico"));
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
@@ -40,6 +41,23 @@ public static class Aplicacao {
 
         Application.Run(new Janela(s));
         return 0;
+    }
+
+    [DllImport("kernel32.dll")] static extern IntPtr GetCurrentProcess();
+    [DllImport("kernel32.dll")] static extern bool TerminateProcess(IntPtr processo, uint codigo);
+
+    /// <summary>
+    /// Encerra os modos de linha de comando na marra, com o código de saída pedido.
+    ///
+    /// Montar as telas deixa a infraestrutura do WinForms de pé, e sem bomba de mensagens
+    /// os finalizadores dela nunca completam: tanto o `return` do Main quanto o
+    /// `Environment.Exit` ficam presos, e o processo zumbi segura o próprio .exe contra a
+    /// recompilação seguinte. Aqui não há nada pra fechar com jeito — o `testes.txt` e o
+    /// `.ico` já foram gravados e fechados antes.
+    /// </summary>
+    static void Encerrar(int codigo) {
+        try { Console.Out.Flush(); } catch { }
+        TerminateProcess(GetCurrentProcess(), (uint)codigo);
     }
 
     /* ---------------------------- avisos ---------------------------- */
@@ -86,6 +104,7 @@ public static class Aplicacao {
             f.Controls.AddRange(new Control[] { lbl, caixa, txt, ok, cancel });
             txt.BringToFront();
             f.AcceptButton = ok; f.CancelButton = cancel;
+            Ui.BarraEscura(f);
             return f.ShowDialog() == DialogResult.OK ? txt.Text : null;
         }
     }

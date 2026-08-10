@@ -2,6 +2,7 @@
 // Escreve o resultado em testes.txt e devolve código de saída 0 (ok) ou 1 (falhou).
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -27,6 +28,7 @@ public static class Testes {
         Serializacao();
         BackupComSenha();
         DpapiIdaEVolta();
+        Icones();
         Telas();
 
         log.AppendLine(string.Format("{0} verificações, {1} falha(s)", total, falhas));
@@ -201,6 +203,43 @@ public static class Testes {
     /// Monta cada tela com dados de verdade. Não olha pixel nenhum — só garante que nenhuma
     /// aba estoura, que é o defeito que aparece direto na cara do usuário.
     /// </summary>
+    // Os glifos são polígonos escritos à mão em coordenadas. Um vértice trocado não quebra
+    // nada — só desenha errado, e ninguém percebe até a tela. Aqui a gente conta a tinta.
+    static void Icones() {
+        string[] nomes = {
+            "inicio", "cartao", "carteira", "resumo", "calendario", "parcelas", "compras",
+            "pessoas", "pessoa", "config", "backup", "alerta", "check", "relogio", "cobrar",
+            "mais", "editar", "excluir", "seta", "fechar", "dinheiro", "exportar", "garfo",
+            "monitor", "camisa", "carro", "repete", "estrela", "pontos"
+        };
+        string magros = "", gordos = "";
+        using (var bmp = new Bitmap(48, 48))
+        using (var g = Graphics.FromImage(bmp)) {
+            foreach (var nome in nomes) {
+                g.Clear(Color.Black);
+                Ui.Icone(g, nome, new RectangleF(0, 0, 48, 48), Color.White);
+                int tinta = 0;
+                for (int x = 0; x < 48; x++)
+                    for (int y = 0; y < 48; y++)
+                        if (bmp.GetPixel(x, y).R > 128) tinta++;
+                if (tinta < 48 * 48 / 50) magros += nome + " ";   // path vazio ou furado inteiro
+                if (tinta > 48 * 48 * 9 / 10) gordos += nome + " ";  // borrão: virou mancha sólida
+            }
+            Ok(magros == "", "ícone(s) sem tinta, o path não fechou: " + magros);
+            Ok(gordos == "", "ícone(s) viraram mancha, os recortes sumiram: " + gordos);
+
+            // o X é um contorno só: duas barras cruzadas com FillMode.Alternate se anulavam no meio
+            g.Clear(Color.Black);
+            Ui.Icone(g, "fechar", new RectangleF(0, 0, 48, 48), Color.White);
+            Ok(bmp.GetPixel(24, 24).R > 128, "o miolo do 'fechar' voltou a ser buraco — virou gravata-borboleta");
+
+            // o rabicho do balão encosta na base dele; se invadir, a sobreposição vira entalhe
+            g.Clear(Color.Black);
+            Ui.Icone(g, "cobrar", new RectangleF(0, 0, 48, 48), Color.White);
+            Ok(bmp.GetPixel(18, 35).R > 128, "o rabicho do 'cobrar' descolou do balão");
+        }
+    }
+
     static void Telas() {
         var s = new Estado();
         s.people.Add(new Pessoa { id = "joao", nome = "João Silva", cor = "#7c7cf5", fone = "11999998888" });

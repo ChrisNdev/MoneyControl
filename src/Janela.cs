@@ -92,6 +92,11 @@ public class Janela : Form {
         Render();
     }
 
+    protected override void OnHandleCreated(EventArgs e) {
+        base.OnHandleCreated(e);
+        Ui.BarraEscura(this);
+    }
+
     /* ---------------------------- estado ---------------------------- */
 
     bool Cartao { get { return modo == "cartao"; } }
