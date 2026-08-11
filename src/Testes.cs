@@ -206,16 +206,37 @@ public static class Testes {
     // Os glifos são polígonos escritos à mão em coordenadas. Um vértice trocado não quebra
     // nada — só desenha errado, e ninguém percebe até a tela. Aqui a gente conta a tinta.
     static void Icones() {
-        string[] nomes = {
-            "inicio", "cartao", "carteira", "resumo", "calendario", "parcelas", "compras",
-            "pessoas", "pessoa", "config", "backup", "alerta", "check", "relogio", "cobrar",
-            "mais", "editar", "excluir", "seta", "fechar", "dinheiro", "exportar", "garfo",
-            "monitor", "camisa", "carro", "repete", "estrela", "pontos"
-        };
+        // A caixa de cada glifo tem que caber no grid de 256 do Phosphor. Comando que o leitor
+        // não conhece, path que não fecha ou conta de arco errada aparecem aqui como caixa
+        // fora do grid, ou como NaN, muito antes de virar desenho torto na tela.
+        string fora = "";
+        foreach (var par in Glifos.D) {
+            using (var p = Svg.Ler(par.Value)) {
+                // achatar antes de medir: a caixa de um path com curva inclui os pontos de
+                // controle, que ficam fora do traço de propósito, e daria alarme falso
+                p.Flatten();
+                var b = p.GetBounds();
+                if (float.IsNaN(b.X) || float.IsNaN(b.Width) || b.Width <= 0 || b.Height <= 0 ||
+                    b.X < -1 || b.Y < -1 || b.Right > 257 || b.Bottom > 257) fora += par.Key + " ";
+            }
+        }
+        Ok(fora == "", "glifo com caixa fora do grid 256: " + fora);
+
+        // O arco é a parte do leitor que mais tem como errar: o SVG descreve pela chegada e o
+        // desenho precisa do centro. Este é o mostrador do relógio, raio 104 em torno de 128,
+        // fechado por dois arcos -- o segundo vem sem repetir a letra do comando.
+        using (var p = Svg.Ler("M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Z")) {
+            p.Flatten();
+            var b = p.GetBounds();
+            Ok(Math.Abs(b.X - 24) < 1.5 && Math.Abs(b.Y - 24) < 1.5 &&
+               Math.Abs(b.Width - 208) < 2 && Math.Abs(b.Height - 208) < 2,
+               "arco saiu torto, a conversão para o centro está errada: caixa " + b);
+        }
+
         string magros = "", gordos = "";
         using (var bmp = new Bitmap(48, 48))
         using (var g = Graphics.FromImage(bmp)) {
-            foreach (var nome in nomes) {
+            foreach (var nome in Glifos.D.Keys) {
                 g.Clear(Color.Black);
                 Ui.Icone(g, nome, new RectangleF(0, 0, 48, 48), Color.White);
                 int tinta = 0;
@@ -228,27 +249,14 @@ public static class Testes {
             Ok(magros == "", "ícone(s) sem tinta, o path não fechou: " + magros);
             Ok(gordos == "", "ícone(s) viraram mancha, os recortes sumiram: " + gordos);
 
-            // Junções que já saíram furadas. FillMode.Alternate anula onde duas formas se
-            // cruzam: um glifo montado de peças sobrepostas fica com buraco justo na emenda,
-            // e a contagem de tinta acima nem pisca. Cada ponto abaixo é uma emenda dessas,
-            // em coordenadas do grid 24x24 dobradas para os 48px do bitmap.
-            var juncoes = new[] {
-                new { nome = "fechar",  x = 24, y = 24 },  // miolo do X
-                new { nome = "mais",    x = 24, y = 24 },  // miolo da cruz
-                new { nome = "relogio", x = 24, y = 24 },  // cruzamento dos ponteiros
-                new { nome = "cobrar",  x = 18, y = 35 },  // rabicho contra a base do balão
-                new { nome = "config",  x = 24, y =  7 },  // dente contra o anel
-                new { nome = "garfo",   x = 16, y = 20 },  // dente do meio contra o cabo
-                new { nome = "repete",  x = 33, y = 12 },  // corpo da seta contra a faixa do anel
-                new { nome = "inicio",  x = 24, y = 22 },  // telhado contra o corpo da casa
-            };
-            string furados = "";
-            foreach (var j in juncoes) {
-                g.Clear(Color.Black);
-                Ui.Icone(g, j.nome, new RectangleF(0, 0, 48, 48), Color.White);
-                if (bmp.GetPixel(j.x, j.y).R <= 128) furados += j.nome + " ";
-            }
-            Ok(furados == "", "junção furada, duas formas se cruzaram: " + furados);
+            // Nome que não existe cai no "pontos" em vez de estourar ou sair em branco.
+            g.Clear(Color.Black);
+            Ui.Icone(g, "glifo-que-nao-existe", new RectangleF(0, 0, 48, 48), Color.White);
+            int sobra = 0;
+            for (int x = 0; x < 48; x++)
+                for (int y = 0; y < 48; y++)
+                    if (bmp.GetPixel(x, y).R > 128) sobra++;
+            Ok(sobra > 48 * 48 / 50, "nome desconhecido devia cair no glifo padrão, saiu vazio");
         }
     }
 

@@ -219,164 +219,29 @@ public static class Ui {
     }
 
     /* ---------------------------- ícones ---------------------------- */
-    // Glifos sólidos num grid 24×24, desenhados com FillMode.Alternate: o que está dentro
-    // de outra forma vira buraco. Sem emoji e sem arquivo de fonte para carregar.
+    // Os 29 glifos vêm do Phosphor (peso fill) e moram em Glifos.cs como o "d" do path, num
+    // grid 256×256. Svg.Ler traduz para GraphicsPath. Continua sem emoji e sem arquivo de
+    // fonte para carregar: o desenho é dado, não recurso externo em disco.
 
-    static GraphicsPath Novo() { var p = new GraphicsPath(); p.FillMode = FillMode.Alternate; return p; }
-    static void R(GraphicsPath p, float x, float y, float w, float h, float r) {
-        using (var q = Round(new RectangleF(x, y, w, h), r)) if (q.PointCount > 0) p.AddPath(q, false);
-    }
-    static void E(GraphicsPath p, float x, float y, float w, float h) { p.AddEllipse(x, y, w, h); }
-    static void Anel(GraphicsPath p, float x, float y, float w, float h, float esp, float ini, float var) {
-        p.AddArc(x, y, w, h, ini, var);
-        p.AddArc(x + esp, y + esp, w - 2 * esp, h - 2 * esp, ini + var, -var);
-        p.CloseFigure();
-    }
+    static readonly Dictionary<string, GraphicsPath> glifos = new Dictionary<string, GraphicsPath>();
 
-    /// <summary>Polígono de cantos arredondados — é o que separa um glifo desenhado de um recorte.</summary>
-    static void PgR(GraphicsPath p, float raio, params float[] xy) {
-        int n = xy.Length / 2;
-        var v = new PointF[n];
-        for (int i = 0; i < n; i++) v[i] = new PointF(xy[i * 2], xy[i * 2 + 1]);
-        var q = new GraphicsPath();
-        for (int i = 0; i < n; i++) {
-            PointF a = v[(i - 1 + n) % n], b = v[i], c = v[(i + 1) % n];
-            // entra e sai do vértice a `raio` de distância, curvando por cima dele
-            q.AddBezier(Rumo(b, a, raio), b, b, Rumo(b, c, raio));
-        }
-        q.CloseFigure();
-        p.AddPath(q, false);
-        q.Dispose();
-    }
-
-    static PointF Rumo(PointF de, PointF para, float d) {
-        float dx = para.X - de.X, dy = para.Y - de.Y;
-        float m = (float)Math.Sqrt(dx * dx + dy * dy);
-        if (m < .001f) return de;
-        d = Math.Min(d, m / 2);
-        return new PointF(de.X + dx / m * d, de.Y + dy / m * d);
-    }
-
-    static void Polar(List<float> xy, double grausCentro, double raio) {
-        double a = grausCentro * Math.PI / 180;
-        xy.Add((float)(12 + raio * Math.Cos(a)));
-        xy.Add((float)(12 + raio * Math.Sin(a)));
-    }
-
+    /// <summary>
+    /// Desenha um glifo dentro da caixa dada. O path é lido uma vez por nome e fica guardado:
+    /// o mesmo ícone é pintado dezenas de vezes a cada repintura de tela, e reler o "d" toda
+    /// vez seria trabalho jogado fora. FillPath não mexe no path, então guardar o objeto e
+    /// reusá-lo é seguro.
+    /// </summary>
     public static void Icone(Graphics g, string nome, RectangleF box, Color cor) {
+        string chave = nome ?? "";
+        if (!Glifos.D.ContainsKey(chave)) chave = "pontos";
+        GraphicsPath p;
+        if (!glifos.TryGetValue(chave, out p)) { p = Svg.Ler(Glifos.D[chave]); glifos[chave] = p; }
+
         var st = g.Save();
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.TranslateTransform(box.X, box.Y);
-        g.ScaleTransform(box.Width / 24f, box.Height / 24f);
-        var p = Novo();
-        switch (nome ?? "") {
-            case "inicio":  // o telhado pousa em y=11, a altura exata do corpo: meia unidade
-                            // de sobreposição abria uma costura escura entre os dois
-                PgR(p, 1.6f, 12, 2, 23, 11, 1, 11); R(p, 4, 11, 16, 11, 3); R(p, 10, 15, 4, 7, 1); break;
-            case "cartao":
-                R(p, 2, 5, 20, 14, 4); R(p, 3.5f, 9, 17, 3, 0); R(p, 5, 14, 6, 2, 1); break;
-            case "carteira":
-                R(p, 2, 5, 20, 15, 4); E(p, 15, 10, 5, 5); break;
-            case "resumo":
-                R(p, 3, 13, 4, 8, 1.5f); R(p, 10, 7, 4, 14, 1.5f); R(p, 17, 3, 4, 18, 1.5f); break;
-            case "calendario":
-                R(p, 7, 2, 2, 5, 1); R(p, 15, 2, 2, 5, 1); R(p, 3, 5, 18, 17, 4);
-                R(p, 4.5f, 10, 15, 1.6f, 0); E(p, 7, 14, 3, 3); E(p, 11, 14, 3, 3); E(p, 15, 14, 3, 3); break;
-            case "parcelas":
-                R(p, 2, 4, 5, 3, 1.5f); R(p, 9, 4, 13, 3, 1.5f);
-                R(p, 2, 10.5f, 5, 3, 1.5f); R(p, 9, 10.5f, 13, 3, 1.5f);
-                R(p, 2, 17, 5, 3, 1.5f); R(p, 9, 17, 13, 3, 1.5f); break;
-            case "compras":   // carrinho: a sacola vira um borrão num chip de 18px, o carrinho não
-                // formas que não se cruzam: com FillMode.Alternate, sobreposição viraria buraco
-                PgR(p, 0.7f, 0.8f, 2.4f, 6.6f, 2.4f, 9, 6, 6.2f, 6, 4.4f, 4.8f, 0.8f, 4.8f);
-                PgR(p, 1.2f, 6.8f, 6, 22.5f, 6, 19.5f, 15, 9, 15);
-                E(p, 7.6f, 17, 3.8f, 3.8f); E(p, 15.6f, 17, 3.8f, 3.8f); break;
-            case "pessoas":
-                E(p, 4, 3, 8, 8); R(p, 1, 13, 14, 9, 4.5f); E(p, 14, 5, 6, 6); R(p, 16, 14, 7, 8, 3.5f); break;
-            case "pessoa":
-                E(p, 8, 3, 8, 8); R(p, 3, 14, 18, 8, 4); break;
-            case "config": {
-                // Disco e dentes num contorno só. Como forma solta o dente não tem saída: se
-                // invade o anel a sobreposição vira buraco, e se apenas encosta, o raio dos
-                // cantos abre uma cunha no ponto de contato. Aqui o arco sai pro dente e volta.
-                const double ANG = 9.594;   // asin(1.5/9): meia-largura do dente sobre o anel
-                for (int k = 0; k < 4; k++) {
-                    p.AddArc(3, 3, 18, 18, (float)(k * 90 + ANG), (float)(90 - 2 * ANG));
-                    double a1 = ((k + 1) * 90 - ANG) * Math.PI / 180;
-                    double a2 = ((k + 1) * 90 + ANG) * Math.PI / 180, eixo = (k + 1) * 90 * Math.PI / 180;
-                    float ex = (float)(3 * Math.Cos(eixo)), ey = (float)(3 * Math.Sin(eixo));
-                    float x1 = (float)(12 + 9 * Math.Cos(a1)), y1 = (float)(12 + 9 * Math.Sin(a1));
-                    float x2 = (float)(12 + 9 * Math.Cos(a2)), y2 = (float)(12 + 9 * Math.Sin(a2));
-                    p.AddLine(x1, y1, x1 + ex, y1 + ey);
-                    p.AddLine(x1 + ex, y1 + ey, x2 + ex, y2 + ey);
-                }
-                p.CloseFigure();
-                E(p, 8.5f, 8.5f, 7, 7); break;
-            }
-            case "backup":
-                PgR(p, 1.8f, 12, 2, 21, 6, 21, 12, 12, 22, 3, 12, 3, 6);
-                PgR(p, 0.6f, 7.5f, 12, 10.5f, 15, 16, 8.5f, 18, 10.5f, 10.5f, 18.5f, 6, 14); break;
-            case "alerta":
-                PgR(p, 2.2f, 12, 2.5f, 23, 21, 1, 21); R(p, 11, 9, 2, 6, 1); E(p, 11, 16.5f, 2, 2); break;
-            case "check":
-                PgR(p, 1f, 2.5f, 12, 5.5f, 9, 9.5f, 13, 18.5f, 4, 21.5f, 7, 9.5f, 19); break;
-            case "relogio":  // os dois ponteiros num contorno só em L: cruzados, se furavam no meio
-                E(p, 2, 2, 20, 20); E(p, 5, 5, 14, 14);
-                PgR(p, .9f, 11, 6.5f, 13, 6.5f, 13, 11, 17, 11, 17, 13, 11, 13); break;
-            case "cobrar":  // o rabicho encosta na base do balão, não entra: sobreposição virava buraco
-                R(p, 2, 2, 20, 16, 5); PgR(p, .9f, 7, 18, 7, 23, 13, 18);
-                R(p, 6, 6.5f, 12, 2, 1); R(p, 6, 11, 8, 2, 1); break;
-            case "mais":  // contorno único da cruz: as duas barras cruzadas se anulavam no miolo
-                PgR(p, 1.4f, 10.5f, 3, 13.5f, 3, 13.5f, 10.5f, 21, 10.5f, 21, 13.5f, 13.5f, 13.5f,
-                    13.5f, 21, 10.5f, 21, 10.5f, 13.5f, 3, 13.5f, 3, 10.5f, 10.5f, 10.5f); break;
-            case "editar":
-                PgR(p, .8f, 2, 22, 3.6f, 16.8f, 14.6f, 5.8f, 19.2f, 10.4f, 8.2f, 21.4f);
-                PgR(p, .6f, 16.4f, 4, 20, 7.6f, 22, 5.6f, 18.4f, 2); break;
-            case "excluir":
-                R(p, 3, 5, 18, 2.6f, 1.3f); R(p, 9, 2, 6, 3, 1); R(p, 10.5f, 3.2f, 3, 1.8f, .6f);
-                R(p, 5, 8.5f, 14, 13.5f, 3); R(p, 9, 11.5f, 2, 7.5f, 1); R(p, 13, 11.5f, 2, 7.5f, 1); break;
-            case "seta":
-                PgR(p, 1.2f, 4, 10.5f, 13.5f, 10.5f, 13.5f, 5, 21, 12, 13.5f, 19, 13.5f, 13.5f, 4, 13.5f); break;
-            case "fechar":  // contorno único do X: duas barras cruzadas viravam gravata-borboleta
-                PgR(p, 1.3f, 21.3f, 18.7f, 14.7f, 12, 21.3f, 5.3f, 18.7f, 2.7f, 12, 9.3f,
-                    5.3f, 2.7f, 2.7f, 5.3f, 9.3f, 12, 2.7f, 18.7f, 5.3f, 21.3f, 12, 14.7f,
-                    18.7f, 21.3f); break;
-            case "dinheiro":
-                R(p, 2, 5, 20, 14, 3); E(p, 9.5f, 8.5f, 5, 7); break;
-            case "exportar":
-                R(p, 10.5f, 2, 3, 9, 1.5f); PgR(p, 1.2f, 6.5f, 11, 17.5f, 11, 12, 18);
-                R(p, 3, 19.5f, 18, 2.6f, 1.3f); break;
-            case "garfo":  // um contorno pra cada talher: os dentes eram barras soltas que o cabo
-                           // furava, e a lâmina encontrava o cabo da faca num entalhe
-                PgR(p, .6f, 4, 2, 5.6f, 2, 5.6f, 8, 7, 8, 7, 2, 8.6f, 2, 8.6f, 8, 10, 8, 10, 2,
-                    11.6f, 2, 11.6f, 12, 9.2f, 12, 9.2f, 22, 6.2f, 22, 6.2f, 12, 4, 12);
-                PgR(p, .7f, 16, 2, 19, 2, 19, 11, 18.4f, 13, 18.4f, 22, 16.8f, 22, 16.8f, 13, 16, 11);
-                break;
-            case "monitor":
-                R(p, 2, 3, 20, 14, 3); R(p, 5, 6, 14, 8, 1); R(p, 10.5f, 17.5f, 3, 2.5f, 0);
-                R(p, 6, 20, 12, 2.2f, 1.1f); break;
-            case "camisa":
-                PgR(p, .8f, 9, 2, 12, 4.5f, 15, 2, 21, 5, 19, 10.5f, 17, 9.5f, 17, 22, 7, 22, 7, 9.5f, 5, 10.5f, 3, 5); break;
-            case "carro":
-                R(p, 2, 10, 20, 8, 3); PgR(p, 1.2f, 5, 10, 7, 4.5f, 17, 4.5f, 19, 10);
-                E(p, 4.5f, 13.5f, 4, 4); E(p, 15.5f, 13.5f, 4, 4); break;
-            case "repete": {  // a seta nasce na ponta do arco e aponta pro giro. Antes atravessava
-                              // a faixa do anel, e o cruzamento furava as duas
-                Anel(p, 3, 3, 18, 18, 2.8f, 50, 245);
-                var seta = new List<float>();
-                Polar(seta, 295, 11.8); Polar(seta, 329, 7.6); Polar(seta, 295, 3.6);
-                PgR(p, .8f, seta.ToArray()); break;
-            }
-            case "estrela": {
-                var xy = new List<float>();
-                for (int i = 0; i < 10; i++) Polar(xy, -90 + i * 36, i % 2 == 0 ? 10.0 : 4.4);
-                PgR(p, 1.5f, xy.ToArray()); break;
-            }
-            default:  // "pontos"
-                E(p, 2.5f, 10.5f, 3.5f, 3.5f); E(p, 10.25f, 10.5f, 3.5f, 3.5f); E(p, 18, 10.5f, 3.5f, 3.5f); break;
-        }
+        g.ScaleTransform(box.Width / 256f, box.Height / 256f);
         using (var b = new SolidBrush(cor)) g.FillPath(b, p);
-        p.Dispose();
         g.Restore(st);
     }
 

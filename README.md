@@ -144,8 +144,8 @@ planilha. Esse arquivo abre em qualquer editor — trate como documento sensíve
 
 ## Compilar do código
 
-Sem projeto, sem NuGet, sem dependência: sete arquivos e o compilador que já vem no
-Windows, em `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`.
+Sem projeto, sem NuGet, sem dependência a instalar: nove arquivos e o compilador que já vem
+no Windows, em `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\`.
 
 ```bat
 csc /target:winexe /out:MoneyControl.exe /win32icon:docs\moneycontrol.ico ^
@@ -160,6 +160,8 @@ csc /target:winexe /out:MoneyControl.exe /win32icon:docs\moneycontrol.ico ^
 | `src\Modelo.cs` | dados e cálculo — parcelas, assinaturas, totais. Sem UI. |
 | `src\Cofre.cs` | gravação cifrada e backup com senha |
 | `src\Ui.cs` | tokens visuais, desenho em GDI+, ícones e os dois controles base |
+| `src\Svg.cs` | leitor do atributo `d` de um path SVG |
+| `src\Glifos.cs` | os 29 glifos, gerado — não edite à mão |
 | `src\Janela.cs` | janela principal: menu lateral e todas as telas |
 | `src\Dialogos.cs` | cadastro de lançamento e de pessoa |
 | `src\Aplicacao.cs` | entrada, avisos e backup |
@@ -167,8 +169,17 @@ csc /target:winexe /out:MoneyControl.exe /win32icon:docs\moneycontrol.ico ^
 
 A interface é desenhada à mão em GDI+: WinForms não tem canto arredondado, gradiente,
 glow nem ícone vetorial. Tudo isso sai de `Ui.cs`, sobre um único controle (`Card`) que as
-telas ou compõem com filhos ou pintam por dentro. Os ícones são glifos geométricos
-desenhados num grid 24×24 — nenhum emoji, nenhum arquivo de fonte para carregar.
+telas ou compõem com filhos ou pintam por dentro.
+
+Os ícones são do [Phosphor](https://phosphoricons.com), peso *fill*, num grid 256×256.
+Cada um mora em `Glifos.cs` como o atributo `d` do path, e `Svg.cs` traduz isso para
+`GraphicsPath` — comandos `M L H V C Q A Z`, com o arco elíptico convertido para curvas.
+Nada de emoji, de arquivo de fonte nem de imagem para carregar: o desenho é dado no
+código. Onde o símbolo é puro traço (`mais`, `fechar`, `pontos`) o peso é *bold*, porque
+o *fill* do Phosphor põe esses três dentro de um quadrado.
+
+O `d` do SVG usa a regra **nonzero**, que é `FillMode.Winding` no GDI+: sobreposição no
+mesmo sentido soma tinta, e só o sentido invertido abre furo.
 
 A marca também é código: `Ui.Marca` pinta o cartão holográfico que aparece no topo do menu,
 e é a mesma rotina que gera o `.ico` do executável — em todos os tamanhos, de 16 a 256.
@@ -191,7 +202,8 @@ MoneyControl.exe --test
 Escreve o resultado em `testes.txt` e devolve `0` se passou, `1` se falhou. Cobre a
 divisão de parcelas sem perder centavo, meses curtos e bissextos, assinaturas (fim no mês
 atual, cancelamento, dia 31), totais por pessoa, o cofre inteiro (ida e volta em disco,
-regravação por cima, adulteração de byte, senha errada, salt e IV novos a cada gravação) e
+regravação por cima, adulteração de byte, senha errada, salt e IV novos a cada gravação),
+o leitor de SVG (caixa de cada glifo dentro do grid, e um arco de volta ao centro certo) e
 a montagem de todas as telas e caixas de cadastro, com dados e vazias.
 
 Os testes guardam e devolvem o `dados.bin` como estava — não mexem nos seus dados.
@@ -201,3 +213,7 @@ Os testes guardam e devolvem o `dados.bin` como estava — não mexem nos seus d
 ## Licença
 
 MIT.
+
+Os ícones são do [Phosphor Icons](https://phosphoricons.com), MIT, © 2023 Phosphor Icons —
+o texto da licença está em [`LICENSE-phosphor`](LICENSE-phosphor). O que entra aqui é o
+atributo `d` dos glifos usados, em `src\Glifos.cs`.
