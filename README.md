@@ -166,6 +166,7 @@ csc /target:winexe /out:MoneyControl.exe /win32icon:docs\moneycontrol.ico ^
 | `src\Dialogos.cs` | cadastro de lançamento e de pessoa |
 | `src\Aplicacao.cs` | entrada, avisos e backup |
 | `src\Testes.cs` | a bateria de verificação |
+| `instalador\Instalador.cs` | o instalador, que também se desinstala |
 
 A interface é desenhada à mão em GDI+: WinForms não tem canto arredondado, gradiente,
 glow nem ícone vetorial. Tudo isso sai de `Ui.cs`, sobre um único controle (`Card`) que as
@@ -192,6 +193,29 @@ Rode isso e recompile quando mexer na marca; o ícone nunca sai de sincronia com
 
 Compra do cartão e dívida pessoal usam **o mesmo formulário e o mesmo gerador de
 parcelas** — a forma das duas é idêntica, e duas cópias seriam dois lugares para errar.
+
+### Instalador
+
+```bat
+csc /target:winexe /out:MoneyControlSetup.exe /win32icon:docs\moneycontrol.ico ^
+    /resource:MoneyControl.exe,app ^
+    /reference:System.dll /reference:System.Core.dll ^
+    /reference:System.Drawing.dll /reference:System.Windows.Forms.dll ^
+    instalador\Instalador.cs src\Ui.cs src\Svg.cs src\Glifos.cs
+```
+
+Compile o `MoneyControl.exe` primeiro: ele entra como recurso dentro do instalador, que
+por isso é um arquivo só. O mesmo executável serve de desinstalador quando roda com
+`--desinstalar`, e é a cópia dele que fica na pasta instalada.
+
+Instala em `%LOCALAPPDATA%\Programs\MoneyControl` e registra em `HKCU` — nada disso pede
+elevação, e instalador que não abre escudo do UAC é o que dá para deixar bonito. Cria
+atalho no menu Iniciar, e na área de trabalho se você deixar marcado.
+
+A tela reusa `Ui.cs`: os mesmos tokens, a mesma `Ui.Marca` e os mesmos glifos da
+aplicação, então o instalador parece o aplicativo em vez de parecer um assistente
+genérico. Desinstalar **não apaga seus dados** — `%LOCALAPPDATA%\MoneyControl` fica onde
+está, para apagar à mão se quiser.
 
 ### Testes
 
