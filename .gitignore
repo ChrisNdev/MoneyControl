@@ -1,3 +1,7 @@
-# o MoneyControl.exe é versionado: é o que se baixa nas Releases
+# o MoneyControlSetup.exe é versionado: é o que se baixa nas Releases.
+# o MoneyControl.exe não, porque ele já vai embutido dentro do instalador —
+# versionar os dois seria guardar o mesmo binário duas vezes.
+MoneyControl.exe
 MoneyControl.pdb
+MoneyControlSetup.pdb
 testes.txt

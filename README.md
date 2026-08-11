@@ -20,11 +20,18 @@
 
 ## Baixar
 
-1. Baixe o **`MoneyControl.exe`** em [Releases](../../releases).
+1. Baixe o **`MoneyControlSetup.exe`** em [Releases](../../releases).
 2. Rode.
 
-É isso. Um arquivo, sem instalador, sem cadastro, sem senha, sem configuração inicial.
-Nada de servidor, nada de conta, nada de nuvem.
+É isso. Um arquivo só, que não pede permissão de administrador e não pergunta nada além
+de você querer ou não atalho na área de trabalho. O aplicativo vai para
+`%LOCALAPPDATA%\Programs\MoneyControl` e aparece no menu Iniciar.
+
+Sem cadastro, sem senha, sem configuração inicial. Nada de servidor, nada de conta, nada
+de nuvem.
+
+Para tirar depois: **Aplicativos** nas configurações do Windows, ou o `desinstalar.exe` na
+pasta instalada. Seus lançamentos e backups ficam onde estão — desinstalar não apaga dado.
 
 Precisa do .NET Framework 4.x, que já vem no Windows 8 ou mais novo.
 
