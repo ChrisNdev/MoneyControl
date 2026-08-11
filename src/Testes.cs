@@ -228,15 +228,27 @@ public static class Testes {
             Ok(magros == "", "ícone(s) sem tinta, o path não fechou: " + magros);
             Ok(gordos == "", "ícone(s) viraram mancha, os recortes sumiram: " + gordos);
 
-            // o X é um contorno só: duas barras cruzadas com FillMode.Alternate se anulavam no meio
-            g.Clear(Color.Black);
-            Ui.Icone(g, "fechar", new RectangleF(0, 0, 48, 48), Color.White);
-            Ok(bmp.GetPixel(24, 24).R > 128, "o miolo do 'fechar' voltou a ser buraco — virou gravata-borboleta");
-
-            // o rabicho do balão encosta na base dele; se invadir, a sobreposição vira entalhe
-            g.Clear(Color.Black);
-            Ui.Icone(g, "cobrar", new RectangleF(0, 0, 48, 48), Color.White);
-            Ok(bmp.GetPixel(18, 35).R > 128, "o rabicho do 'cobrar' descolou do balão");
+            // Junções que já saíram furadas. FillMode.Alternate anula onde duas formas se
+            // cruzam: um glifo montado de peças sobrepostas fica com buraco justo na emenda,
+            // e a contagem de tinta acima nem pisca. Cada ponto abaixo é uma emenda dessas,
+            // em coordenadas do grid 24x24 dobradas para os 48px do bitmap.
+            var juncoes = new[] {
+                new { nome = "fechar",  x = 24, y = 24 },  // miolo do X
+                new { nome = "mais",    x = 24, y = 24 },  // miolo da cruz
+                new { nome = "relogio", x = 24, y = 24 },  // cruzamento dos ponteiros
+                new { nome = "cobrar",  x = 18, y = 35 },  // rabicho contra a base do balão
+                new { nome = "config",  x = 24, y =  7 },  // dente contra o anel
+                new { nome = "garfo",   x = 16, y = 20 },  // dente do meio contra o cabo
+                new { nome = "repete",  x = 33, y = 12 },  // corpo da seta contra a faixa do anel
+                new { nome = "inicio",  x = 24, y = 22 },  // telhado contra o corpo da casa
+            };
+            string furados = "";
+            foreach (var j in juncoes) {
+                g.Clear(Color.Black);
+                Ui.Icone(g, j.nome, new RectangleF(0, 0, 48, 48), Color.White);
+                if (bmp.GetPixel(j.x, j.y).R <= 128) furados += j.nome + " ";
+            }
+            Ok(furados == "", "junção furada, duas formas se cruzaram: " + furados);
         }
     }
 

@@ -270,8 +270,9 @@ public static class Ui {
         g.ScaleTransform(box.Width / 24f, box.Height / 24f);
         var p = Novo();
         switch (nome ?? "") {
-            case "inicio":
-                PgR(p, 1.6f, 12, 2, 23, 11.5f, 1, 11.5f); R(p, 4, 11, 16, 11, 3); R(p, 10, 15, 4, 7, 1); break;
+            case "inicio":  // o telhado pousa em y=11, a altura exata do corpo: meia unidade
+                            // de sobreposição abria uma costura escura entre os dois
+                PgR(p, 1.6f, 12, 2, 23, 11, 1, 11); R(p, 4, 11, 16, 11, 3); R(p, 10, 15, 4, 7, 1); break;
             case "cartao":
                 R(p, 2, 5, 20, 14, 4); R(p, 3.5f, 9, 17, 3, 0); R(p, 5, 14, 6, 2, 1); break;
             case "carteira":
@@ -294,10 +295,24 @@ public static class Ui {
                 E(p, 4, 3, 8, 8); R(p, 1, 13, 14, 9, 4.5f); E(p, 14, 5, 6, 6); R(p, 16, 14, 7, 8, 3.5f); break;
             case "pessoa":
                 E(p, 8, 3, 8, 8); R(p, 3, 14, 18, 8, 4); break;
-            case "config":
-                E(p, 3, 3, 18, 18); E(p, 8.5f, 8.5f, 7, 7);
-                R(p, 10.5f, 0, 3, 4, 1); R(p, 10.5f, 20, 3, 4, 1);
-                R(p, 0, 10.5f, 4, 3, 1); R(p, 20, 10.5f, 4, 3, 1); break;
+            case "config": {
+                // Disco e dentes num contorno só. Como forma solta o dente não tem saída: se
+                // invade o anel a sobreposição vira buraco, e se apenas encosta, o raio dos
+                // cantos abre uma cunha no ponto de contato. Aqui o arco sai pro dente e volta.
+                const double ANG = 9.594;   // asin(1.5/9): meia-largura do dente sobre o anel
+                for (int k = 0; k < 4; k++) {
+                    p.AddArc(3, 3, 18, 18, (float)(k * 90 + ANG), (float)(90 - 2 * ANG));
+                    double a1 = ((k + 1) * 90 - ANG) * Math.PI / 180;
+                    double a2 = ((k + 1) * 90 + ANG) * Math.PI / 180, eixo = (k + 1) * 90 * Math.PI / 180;
+                    float ex = (float)(3 * Math.Cos(eixo)), ey = (float)(3 * Math.Sin(eixo));
+                    float x1 = (float)(12 + 9 * Math.Cos(a1)), y1 = (float)(12 + 9 * Math.Sin(a1));
+                    float x2 = (float)(12 + 9 * Math.Cos(a2)), y2 = (float)(12 + 9 * Math.Sin(a2));
+                    p.AddLine(x1, y1, x1 + ex, y1 + ey);
+                    p.AddLine(x1 + ex, y1 + ey, x2 + ex, y2 + ey);
+                }
+                p.CloseFigure();
+                E(p, 8.5f, 8.5f, 7, 7); break;
+            }
             case "backup":
                 PgR(p, 1.8f, 12, 2, 21, 6, 21, 12, 12, 22, 3, 12, 3, 6);
                 PgR(p, 0.6f, 7.5f, 12, 10.5f, 15, 16, 8.5f, 18, 10.5f, 10.5f, 18.5f, 6, 14); break;
@@ -305,13 +320,15 @@ public static class Ui {
                 PgR(p, 2.2f, 12, 2.5f, 23, 21, 1, 21); R(p, 11, 9, 2, 6, 1); E(p, 11, 16.5f, 2, 2); break;
             case "check":
                 PgR(p, 1f, 2.5f, 12, 5.5f, 9, 9.5f, 13, 18.5f, 4, 21.5f, 7, 9.5f, 19); break;
-            case "relogio":
-                E(p, 2, 2, 20, 20); E(p, 5, 5, 14, 14); R(p, 11, 6.5f, 2, 6.5f, 1); R(p, 11, 11, 6, 2, 1); break;
+            case "relogio":  // os dois ponteiros num contorno só em L: cruzados, se furavam no meio
+                E(p, 2, 2, 20, 20); E(p, 5, 5, 14, 14);
+                PgR(p, .9f, 11, 6.5f, 13, 6.5f, 13, 11, 17, 11, 17, 13, 11, 13); break;
             case "cobrar":  // o rabicho encosta na base do balão, não entra: sobreposição virava buraco
                 R(p, 2, 2, 20, 16, 5); PgR(p, .9f, 7, 18, 7, 23, 13, 18);
                 R(p, 6, 6.5f, 12, 2, 1); R(p, 6, 11, 8, 2, 1); break;
-            case "mais":
-                R(p, 10.5f, 3, 3, 18, 1.5f); R(p, 3, 10.5f, 18, 3, 1.5f); break;
+            case "mais":  // contorno único da cruz: as duas barras cruzadas se anulavam no miolo
+                PgR(p, 1.4f, 10.5f, 3, 13.5f, 3, 13.5f, 10.5f, 21, 10.5f, 21, 13.5f, 13.5f, 13.5f,
+                    13.5f, 21, 10.5f, 21, 10.5f, 13.5f, 3, 13.5f, 3, 10.5f, 10.5f, 10.5f); break;
             case "editar":
                 PgR(p, .8f, 2, 22, 3.6f, 16.8f, 14.6f, 5.8f, 19.2f, 10.4f, 8.2f, 21.4f);
                 PgR(p, .6f, 16.4f, 4, 20, 7.6f, 22, 5.6f, 18.4f, 2); break;
@@ -329,10 +346,12 @@ public static class Ui {
             case "exportar":
                 R(p, 10.5f, 2, 3, 9, 1.5f); PgR(p, 1.2f, 6.5f, 11, 17.5f, 11, 12, 18);
                 R(p, 3, 19.5f, 18, 2.6f, 1.3f); break;
-            case "garfo":
-                R(p, 4, 2, 1.6f, 9, .8f); R(p, 7, 2, 1.6f, 9, .8f); R(p, 10, 2, 1.6f, 9, .8f);
-                R(p, 6.2f, 9.5f, 3, 12.5f, 1.5f); PgR(p, 1f, 16, 2, 19, 2, 19, 13, 16, 13);
-                R(p, 16.8f, 13, 1.6f, 9, .8f); break;
+            case "garfo":  // um contorno pra cada talher: os dentes eram barras soltas que o cabo
+                           // furava, e a lâmina encontrava o cabo da faca num entalhe
+                PgR(p, .6f, 4, 2, 5.6f, 2, 5.6f, 8, 7, 8, 7, 2, 8.6f, 2, 8.6f, 8, 10, 8, 10, 2,
+                    11.6f, 2, 11.6f, 12, 9.2f, 12, 9.2f, 22, 6.2f, 22, 6.2f, 12, 4, 12);
+                PgR(p, .7f, 16, 2, 19, 2, 19, 11, 18.4f, 13, 18.4f, 22, 16.8f, 22, 16.8f, 13, 16, 11);
+                break;
             case "monitor":
                 R(p, 2, 3, 20, 14, 3); R(p, 5, 6, 14, 8, 1); R(p, 10.5f, 17.5f, 3, 2.5f, 0);
                 R(p, 6, 20, 12, 2.2f, 1.1f); break;
@@ -341,8 +360,13 @@ public static class Ui {
             case "carro":
                 R(p, 2, 10, 20, 8, 3); PgR(p, 1.2f, 5, 10, 7, 4.5f, 17, 4.5f, 19, 10);
                 E(p, 4.5f, 13.5f, 4, 4); E(p, 15.5f, 13.5f, 4, 4); break;
-            case "repete":
-                Anel(p, 3, 3, 18, 18, 2.8f, 50, 280); PgR(p, 1f, 17.5f, 0.5f, 23.5f, 5.5f, 16, 7.5f); break;
+            case "repete": {  // a seta nasce na ponta do arco e aponta pro giro. Antes atravessava
+                              // a faixa do anel, e o cruzamento furava as duas
+                Anel(p, 3, 3, 18, 18, 2.8f, 50, 245);
+                var seta = new List<float>();
+                Polar(seta, 295, 11.8); Polar(seta, 329, 7.6); Polar(seta, 295, 3.6);
+                PgR(p, .8f, seta.ToArray()); break;
+            }
             case "estrela": {
                 var xy = new List<float>();
                 for (int i = 0; i < 10; i++) Polar(xy, -90 + i * 36, i % 2 == 0 ? 10.0 : 4.4);
